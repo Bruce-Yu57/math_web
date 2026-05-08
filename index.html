@@ -40,8 +40,8 @@ main{max-width:1100px;margin:0 auto;padding:2rem}
 #add-form.show{display:block}
 .form-label{font-size:13px;font-weight:500;color:var(--cat-txt);margin-bottom:10px}
 .form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-input[type=text]{padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;font-family:'Noto Sans TC',sans-serif;outline:none;transition:border-color .15s;background:var(--bg);color:var(--txt)}
-input[type=text]:focus{border-color:#999}
+input[type=text],input[type=password]{padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;font-family:'Noto Sans TC',sans-serif;outline:none;transition:border-color .15s;background:var(--bg);color:var(--txt)}
+input[type=text]:focus,input[type=password]:focus{border-color:#999}
 #inp-name{flex:1;min-width:150px}
 #inp-url{flex:2;min-width:200px}
 .btn-save{padding:7px 18px;border-radius:var(--r-md);font-size:13px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;background:var(--cat-bg);color:var(--cat-txt);border:1px solid var(--cat-bdr)}
@@ -69,18 +69,34 @@ input[type=text]:focus{border-color:#999}
 .empty p{font-size:14px}
 .empty small{font-size:12px;display:block;margin-top:4px}
 footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-align:center;font-size:12px;color:var(--txt3)}
+
+/* 密碼 Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:var(--r-lg);padding:2rem;width:320px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-title{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:500;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--txt2);margin-bottom:1.25rem}
+.modal input{width:100%;margin-bottom:10px;letter-spacing:3px;font-size:16px}
+.modal-row{display:flex;gap:8px}
+.modal-row .btn-save{flex:1;text-align:center;padding:9px}
+.modal-row .btn-cancel{flex:1;text-align:center;padding:9px}
+.modal-error{font-size:12px;color:#c0392b;margin-bottom:10px;display:none}
+.modal-error.show{display:block}
 </style>
 </head>
 <body>
+
 <header>
   <div>
     <p class="eyebrow">游本孚 · 本孚老師</p>
     <h1>數學互動程式目錄</h1>
     <p class="tagline">互動式學習工具 · 適合各年段使用</p>
   </div>
-  <button id="admin-toggle" onclick="toggleAdmin()">管理</button>
+  <button id="admin-toggle" onclick="clickAdmin()">管理</button>
 </header>
+
 <nav class="tabs" id="tabs"></nav>
+
 <main>
   <div class="action-bar">
     <span class="count" id="count-label">0 個互動程式</span>
@@ -97,8 +113,26 @@ footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-al
   </div>
   <div id="grid-area"></div>
 </main>
+
 <footer>游本孚老師 · 本孚老師數學互動程式 · 版權所有</footer>
+
+<!-- 密碼 Modal -->
+<div class="modal-overlay" id="pw-modal">
+  <div class="modal">
+    <p class="modal-title">管理員登入</p>
+    <p class="modal-sub">請輸入管理密碼以進入編輯模式</p>
+    <input type="password" id="pw-input" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')checkPw()">
+    <p class="modal-error" id="pw-error">密碼錯誤，請再試一次</p>
+    <div class="modal-row">
+      <button class="btn-save" onclick="checkPw()">確認</button>
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+    </div>
+  </div>
+</div>
+
 <script>
+const ADMIN_PW = 'lcjh';
+
 const CATS=[
   {id:'elementary',label:'國小數學',ico:'➕',bg:'--teal-bg',txt:'--teal-txt',bdr:'--teal-bdr'},
   {id:'grade7',label:'七年級',ico:'📈',bg:'--blue-bg',txt:'--blue-txt',bdr:'--blue-bdr'},
@@ -109,13 +143,57 @@ const CATS=[
 const CARD_ICOS=['🔢','📊','📏','📈','🔵','⬡','🎯','⚡','💡','🏆','🧮','🔶','➗','∑','π','√'];
 let data=JSON.parse(localStorage.getItem('math-dir')||'{"elementary":[],"grade7":[],"grade8":[],"grade9":[],"other":[]}');
 let activeCat='elementary',isAdmin=false,editingId=null,showAdd=false;
+
 function save(){localStorage.setItem('math-dir',JSON.stringify(data))}
+
 function applyCatVars(cat){
   const r=document.documentElement.style;
   r.setProperty('--cat-bg',`var(${cat.bg})`);
   r.setProperty('--cat-txt',`var(${cat.txt})`);
   r.setProperty('--cat-bdr',`var(${cat.bdr})`);
 }
+
+// ── 密碼 Modal ──
+function clickAdmin(){
+  if(isAdmin){ logOut(); return; }
+  document.getElementById('pw-modal').classList.add('show');
+  document.getElementById('pw-error').classList.remove('show');
+  document.getElementById('pw-input').value='';
+  setTimeout(()=>document.getElementById('pw-input').focus(),50);
+}
+function closeModal(){
+  document.getElementById('pw-modal').classList.remove('show');
+}
+function checkPw(){
+  const val=document.getElementById('pw-input').value;
+  if(val===ADMIN_PW){
+    closeModal();
+    enterAdmin();
+  } else {
+    document.getElementById('pw-error').classList.add('show');
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+function enterAdmin(){
+  isAdmin=true;
+  document.getElementById('add-btn').classList.add('show');
+  const btn=document.getElementById('admin-toggle');
+  btn.textContent='✓ 編輯中';
+  btn.classList.add('on');
+  renderGrid();
+}
+function logOut(){
+  isAdmin=false;editingId=null;showAdd=false;
+  document.getElementById('add-form').classList.remove('show');
+  document.getElementById('add-btn').classList.remove('show');
+  const btn=document.getElementById('admin-toggle');
+  btn.textContent='管理';
+  btn.classList.remove('on');
+  renderGrid();
+}
+
+// ── Tabs ──
 function renderTabs(){
   document.getElementById('tabs').innerHTML=CATS.map(c=>`
     <button class="tab${activeCat===c.id?' active':''}"
@@ -131,15 +209,8 @@ function setCategory(id){
   document.getElementById('add-btn').classList.toggle('show',isAdmin);
   renderTabs();renderGrid();
 }
-function toggleAdmin(){
-  isAdmin=!isAdmin;editingId=null;showAdd=false;
-  document.getElementById('add-form').classList.remove('show');
-  document.getElementById('add-btn').classList.toggle('show',isAdmin);
-  const btn=document.getElementById('admin-toggle');
-  btn.textContent=isAdmin?'✓ 編輯中':'管理';
-  btn.classList.toggle('on',isAdmin);
-  renderGrid();
-}
+
+// ── Add Form ──
 function toggleAddForm(){
   showAdd=!showAdd;
   document.getElementById('add-form').classList.toggle('show',showAdd);
@@ -156,6 +227,8 @@ function addProgram(){
   document.getElementById('inp-url').value='';
   showAdd=false;document.getElementById('add-form').classList.remove('show');
 }
+
+// ── Grid ──
 function renderGrid(){
   const list=data[activeCat]||[];
   document.getElementById('count-label').textContent=`${list.length} 個互動程式`;
@@ -193,6 +266,7 @@ function renderCard(p,i,total){
     </div>`:''}
   </div>`;
 }
+
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function startEdit(id){editingId=id;renderGrid();setTimeout(()=>document.getElementById('edit-name')?.focus(),50)}
 function cancelEdit(){editingId=null;renderGrid()}
@@ -217,6 +291,12 @@ function move(id,dir){
   [list[i],list[j]]=[list[j],list[i]];
   save();renderGrid();
 }
+
+// 點 Modal 外面關閉
+document.getElementById('pw-modal').addEventListener('click',function(e){
+  if(e.target===this)closeModal();
+});
+
 applyCatVars(CATS[0]);
 renderTabs();
 renderGrid();

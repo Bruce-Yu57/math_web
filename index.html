@@ -50,8 +50,6 @@ input[type=text]:focus,input[type=password]:focus{border-color:#999}
 .btn-save{padding:7px 18px;border-radius:var(--r-md);font-size:13px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;background:var(--cat-bg);color:var(--cat-txt);border:1px solid var(--cat-bdr)}
 .btn-cancel{padding:7px 14px;border-radius:var(--r-md);font-size:13px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;background:none;color:var(--txt2);border:1px solid var(--border)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-
-/* 卡片 */
 .card-wrap{position:relative;transition:opacity .2s}
 .card-wrap.dragging{opacity:.35}
 .card-wrap.drag-over .card{border-color:var(--cat-bdr);box-shadow:0 0 0 2px var(--cat-bdr)}
@@ -60,39 +58,30 @@ input[type=text]:focus,input[type=password]:focus{border-color:#999}
 .card-ico{width:42px;height:42px;border-radius:var(--r-md);background:var(--cat-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:22px}
 .card-name{font-family:'Noto Serif TC',serif;font-size:14px;font-weight:500;color:var(--txt);line-height:1.4;margin-bottom:5px}
 .card-url{font-size:11px;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* 拖曳把手 */
-.drag-handle{
-  position:absolute;top:8px;left:8px;
-  width:22px;height:22px;
-  display:none;align-items:center;justify-content:center;
-  cursor:grab;color:var(--txt3);font-size:14px;
-  border-radius:4px;
-}
+.drag-handle{position:absolute;top:8px;left:8px;width:22px;height:22px;display:none;align-items:center;justify-content:center;cursor:grab;color:var(--txt3);font-size:14px;border-radius:4px}
 .drag-handle:active{cursor:grabbing}
 .drag-handle.show{display:flex}
-
-/* 編輯按鈕 */
 .card-admin{display:none;position:absolute;top:7px;right:7px;gap:3px}
 .card-admin.show{display:flex}
 .ico-btn{width:26px;height:26px;border:1px solid var(--border);background:var(--surface);border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--txt2);transition:background .1s}
 .ico-btn:hover{background:var(--bg)}
 .ico-btn.del{color:#c0392b}
-
-/* 編輯卡片 */
 .edit-card{background:var(--surface);border:1px solid var(--cat-bdr);border-radius:var(--r-lg);padding:1rem}
 .edit-card input{width:100%;margin-bottom:8px;display:block}
 .edit-card .edit-url{margin-bottom:12px;font-size:11px}
 .edit-row{display:flex;gap:6px}
 .edit-row .btn-save,.edit-row .btn-cancel{flex:1;text-align:center}
-
 .empty{text-align:center;padding:3rem 0;color:var(--txt2)}
 .empty-ico{font-size:40px;display:block;margin-bottom:12px;opacity:.25}
 .empty p{font-size:14px}
 .empty small{font-size:12px;display:block;margin-top:4px}
-footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-align:center;font-size:12px;color:var(--txt3)}
 
-/* 密碼 Modal */
+/* 載入中 */
+#loading{text-align:center;padding:3rem;color:var(--txt2);font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--cat-txt);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-align:center;font-size:12px;color:var(--txt3)}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
 .modal{background:var(--surface);border-radius:var(--r-lg);padding:2rem;width:320px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.15)}
@@ -100,8 +89,7 @@ footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-al
 .modal-sub{font-size:13px;color:var(--txt2);margin-bottom:1.25rem}
 .modal input{width:100%;margin-bottom:10px;letter-spacing:3px;font-size:16px}
 .modal-row{display:flex;gap:8px}
-.modal-row .btn-save{flex:1;text-align:center;padding:9px}
-.modal-row .btn-cancel{flex:1;text-align:center;padding:9px}
+.modal-row .btn-save,.modal-row .btn-cancel{flex:1;text-align:center;padding:9px}
 .modal-error{font-size:12px;color:#c0392b;margin-bottom:10px;display:none}
 .modal-error.show{display:block}
 </style>
@@ -114,17 +102,17 @@ footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-al
     <h1>數學互動程式目錄</h1>
     <p class="tagline">互動式學習工具 · 適合各年段使用</p>
   </div>
-  <button id="admin-toggle" onclick="clickAdmin()">管理</button>
+  <button id="admin-toggle" onclick="window.clickAdmin()">管理</button>
 </header>
 
 <nav class="tabs" id="tabs"></nav>
 
 <main>
   <div class="action-bar">
-    <span class="count" id="count-label">0 個互動程式</span>
+    <span class="count" id="count-label">載入中…</span>
     <div class="action-right">
       <span class="drag-hint" id="drag-hint">⠿ 拖曳卡片可調整順序</span>
-      <button id="add-btn" onclick="toggleAddForm()">＋ 新增程式</button>
+      <button id="add-btn" onclick="window.toggleAddForm()">＋ 新增程式</button>
     </div>
   </div>
   <div id="add-form">
@@ -132,222 +120,253 @@ footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-al
     <div class="form-row">
       <input type="text" id="inp-name" placeholder="程式名稱">
       <input type="text" id="inp-url" placeholder="網址 URL（https://...）">
-      <button class="btn-save" onclick="addProgram()">儲存</button>
-      <button class="btn-cancel" onclick="toggleAddForm()">取消</button>
+      <button class="btn-save" onclick="window.addProgram()">儲存</button>
+      <button class="btn-cancel" onclick="window.toggleAddForm()">取消</button>
     </div>
   </div>
-  <div id="grid-area"></div>
+  <div id="grid-area"><div id="loading"><div class="spinner"></div>資料載入中…</div></div>
 </main>
 
 <footer>游本孚老師 · 本孚老師數學互動程式 · 版權所有</footer>
 
-<!-- 密碼 Modal -->
 <div class="modal-overlay" id="pw-modal">
   <div class="modal">
     <p class="modal-title">管理員登入</p>
     <p class="modal-sub">請輸入管理密碼以進入編輯模式</p>
-    <input type="password" id="pw-input" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')checkPw()">
+    <input type="password" id="pw-input" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')window.checkPw()">
     <p class="modal-error" id="pw-error">密碼錯誤，請再試一次</p>
     <div class="modal-row">
-      <button class="btn-save" onclick="checkPw()">確認</button>
-      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="window.checkPw()">確認</button>
+      <button class="btn-cancel" onclick="window.closeModal()">取消</button>
     </div>
   </div>
 </div>
 
-<script>
-const ADMIN_PW='lcjh';
-const CATS=[
-  {id:'elementary',label:'國小數學',ico:'➕',bg:'--teal-bg',txt:'--teal-txt',bdr:'--teal-bdr'},
-  {id:'grade7',label:'七年級',ico:'📈',bg:'--blue-bg',txt:'--blue-txt',bdr:'--blue-bdr'},
-  {id:'grade8',label:'八年級',ico:'📐',bg:'--purple-bg',txt:'--purple-txt',bdr:'--purple-bdr'},
-  {id:'grade9',label:'九年級',ico:'⭕',bg:'--coral-bg',txt:'--coral-txt',bdr:'--coral-bdr'},
-  {id:'other',label:'其他領域',ico:'♾️',bg:'--amber-bg',txt:'--amber-txt',bdr:'--amber-bdr'},
-];
-const CARD_ICOS=['🔢','📊','📏','📈','🔵','⬡','🎯','⚡','💡','🏆','🧮','🔶','➗','∑','π','√'];
-let data=JSON.parse(localStorage.getItem('math-dir')||'{"elementary":[],"grade7":[],"grade8":[],"grade9":[],"other":[]}');
-let activeCat='elementary',isAdmin=false,editingId=null,showAdd=false;
-let dragSrcId=null;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
 
-function save(){localStorage.setItem('math-dir',JSON.stringify(data))}
-function applyCatVars(cat){
-  const r=document.documentElement.style;
-  r.setProperty('--cat-bg',`var(${cat.bg})`);
-  r.setProperty('--cat-txt',`var(${cat.txt})`);
-  r.setProperty('--cat-bdr',`var(${cat.bdr})`);
+const firebaseConfig = {
+  apiKey: "AIzaSyDAZG1UkIm7cN7hP5IvywWPPeWV5NHKhYM",
+  authDomain: "math-penfu.firebaseapp.com",
+  databaseURL: "https://math-penfu-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "math-penfu",
+  storageBucket: "math-penfu.firebasestorage.app",
+  messagingSenderId: "216125315067",
+  appId: "1:216125315067:web:2cd9207768ef8691f21d5e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const ADMIN_PW = 'lcjh';
+const CATS = [
+  {id:'elementary',label:'國小數學',ico:'➕',bg:'--teal-bg',txt:'--teal-txt',bdr:'--teal-bdr'},
+  {id:'grade7',    label:'七年級',  ico:'📈',bg:'--blue-bg', txt:'--blue-txt', bdr:'--blue-bdr'},
+  {id:'grade8',    label:'八年級',  ico:'📐',bg:'--purple-bg',txt:'--purple-txt',bdr:'--purple-bdr'},
+  {id:'grade9',    label:'九年級',  ico:'⭕',bg:'--coral-bg',txt:'--coral-txt',bdr:'--coral-bdr'},
+  {id:'other',     label:'其他領域',ico:'♾️',bg:'--amber-bg',txt:'--amber-txt',bdr:'--amber-bdr'},
+];
+const CARD_ICOS = ['🔢','📊','📏','📈','🔵','⬡','🎯','⚡','💡','🏆','🧮','🔶','➗','∑','π','√'];
+
+let data = {elementary:[],grade7:[],grade8:[],grade9:[],other:[]};
+let activeCat = 'elementary', isAdmin = false, editingId = null, showAdd = false;
+let dragSrcId = null;
+
+// ── Firebase 讀取（即時同步）──
+const dbRef = ref(db, 'math-directory');
+onValue(dbRef, snapshot => {
+  const val = snapshot.val();
+  if (val) {
+    CATS.forEach(c => { data[c.id] = val[c.id] || []; });
+  }
+  renderGrid();
+});
+
+// ── Firebase 寫入 ──
+function save() {
+  set(ref(db, 'math-directory'), data);
+}
+
+function applyCatVars(cat) {
+  const r = document.documentElement.style;
+  r.setProperty('--cat-bg',  `var(${cat.bg})`);
+  r.setProperty('--cat-txt', `var(${cat.txt})`);
+  r.setProperty('--cat-bdr', `var(${cat.bdr})`);
 }
 
 // ── 密碼 ──
-function clickAdmin(){
-  if(isAdmin){logOut();return;}
+window.clickAdmin = () => {
+  if (isAdmin) { logOut(); return; }
   document.getElementById('pw-modal').classList.add('show');
   document.getElementById('pw-error').classList.remove('show');
-  document.getElementById('pw-input').value='';
-  setTimeout(()=>document.getElementById('pw-input').focus(),50);
-}
-function closeModal(){document.getElementById('pw-modal').classList.remove('show')}
-function checkPw(){
-  if(document.getElementById('pw-input').value===ADMIN_PW){closeModal();enterAdmin();}
-  else{document.getElementById('pw-error').classList.add('show');document.getElementById('pw-input').value='';document.getElementById('pw-input').focus();}
-}
-function enterAdmin(){
-  isAdmin=true;
+  document.getElementById('pw-input').value = '';
+  setTimeout(() => document.getElementById('pw-input').focus(), 50);
+};
+window.closeModal = () => document.getElementById('pw-modal').classList.remove('show');
+window.checkPw = () => {
+  if (document.getElementById('pw-input').value === ADMIN_PW) {
+    window.closeModal(); enterAdmin();
+  } else {
+    document.getElementById('pw-error').classList.add('show');
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+};
+function enterAdmin() {
+  isAdmin = true;
   document.getElementById('add-btn').classList.add('show');
   document.getElementById('drag-hint').classList.add('show');
-  const btn=document.getElementById('admin-toggle');
-  btn.textContent='✓ 編輯中';btn.classList.add('on');
+  const btn = document.getElementById('admin-toggle');
+  btn.textContent = '✓ 編輯中'; btn.classList.add('on');
   renderGrid();
 }
-function logOut(){
-  isAdmin=false;editingId=null;showAdd=false;
+function logOut() {
+  isAdmin = false; editingId = null; showAdd = false;
   document.getElementById('add-form').classList.remove('show');
   document.getElementById('add-btn').classList.remove('show');
   document.getElementById('drag-hint').classList.remove('show');
-  const btn=document.getElementById('admin-toggle');
-  btn.textContent='管理';btn.classList.remove('on');
+  const btn = document.getElementById('admin-toggle');
+  btn.textContent = '管理'; btn.classList.remove('on');
   renderGrid();
 }
 
 // ── Tabs ──
-function renderTabs(){
-  document.getElementById('tabs').innerHTML=CATS.map(c=>`
+function renderTabs() {
+  document.getElementById('tabs').innerHTML = CATS.map(c => `
     <button class="tab${activeCat===c.id?' active':''}"
       style="${activeCat===c.id?`color:var(${c.txt});border-bottom-color:var(${c.bdr})`:'color:var(--txt2)'}"
-      onclick="setCategory('${c.id}')">
+      onclick="window.setCategory('${c.id}')">
       <span>${c.ico}</span>${c.label}
     </button>`).join('');
 }
-function setCategory(id){
-  activeCat=id;editingId=null;showAdd=false;
-  applyCatVars(CATS.find(c=>c.id===id));
+window.setCategory = id => {
+  activeCat = id; editingId = null; showAdd = false;
+  applyCatVars(CATS.find(c => c.id === id));
   document.getElementById('add-form').classList.remove('show');
-  document.getElementById('add-btn').classList.toggle('show',isAdmin);
-  document.getElementById('drag-hint').classList.toggle('show',isAdmin);
-  renderTabs();renderGrid();
-}
+  document.getElementById('add-btn').classList.toggle('show', isAdmin);
+  document.getElementById('drag-hint').classList.toggle('show', isAdmin);
+  renderTabs(); renderGrid();
+};
 
 // ── 新增 ──
-function toggleAddForm(){
-  showAdd=!showAdd;
-  document.getElementById('add-form').classList.toggle('show',showAdd);
-  if(showAdd)document.getElementById('inp-name').focus();
-}
-function addProgram(){
-  const name=document.getElementById('inp-name').value.trim();
-  let url=document.getElementById('inp-url').value.trim();
-  if(!name||!url)return;
-  if(!url.startsWith('http'))url='https://'+url;
-  data[activeCat].push({id:Date.now().toString(),name,url});
-  save();renderGrid();
-  document.getElementById('inp-name').value='';
-  document.getElementById('inp-url').value='';
-  showAdd=false;document.getElementById('add-form').classList.remove('show');
-}
+window.toggleAddForm = () => {
+  showAdd = !showAdd;
+  document.getElementById('add-form').classList.toggle('show', showAdd);
+  if (showAdd) document.getElementById('inp-name').focus();
+};
+window.addProgram = () => {
+  const name = document.getElementById('inp-name').value.trim();
+  let url = document.getElementById('inp-url').value.trim();
+  if (!name || !url) return;
+  if (!url.startsWith('http')) url = 'https://' + url;
+  data[activeCat].push({id: Date.now().toString(), name, url});
+  save();
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-url').value = '';
+  showAdd = false;
+  document.getElementById('add-form').classList.remove('show');
+};
 
 // ── Grid ──
-function renderGrid(){
-  const list=data[activeCat]||[];
-  document.getElementById('count-label').textContent=`${list.length} 個互動程式`;
-  const area=document.getElementById('grid-area');
-  if(list.length===0){
-    const cat=CATS.find(c=>c.id===activeCat);
-    area.innerHTML=`<div class="empty"><span class="empty-ico">${cat.ico}</span><p>此類別尚未新增程式</p>${isAdmin?'<small>點擊「新增程式」開始建立</small>':''}</div>`;
+function renderGrid() {
+  const list = data[activeCat] || [];
+  document.getElementById('count-label').textContent = `${list.length} 個互動程式`;
+  const area = document.getElementById('grid-area');
+  if (list.length === 0) {
+    const cat = CATS.find(c => c.id === activeCat);
+    area.innerHTML = `<div class="empty"><span class="empty-ico">${cat.ico}</span><p>此類別尚未新增程式</p>${isAdmin ? '<small>點擊「新增程式」開始建立</small>' : ''}</div>`;
     return;
   }
-  area.innerHTML=`<div class="grid" id="card-grid">${list.map((p,i)=>renderCard(p,i)).join('')}</div>`;
-  if(isAdmin)initDrag();
+  area.innerHTML = `<div class="grid" id="card-grid">${list.map((p,i) => renderCard(p,i)).join('')}</div>`;
+  if (isAdmin) initDrag();
 }
 
-function renderCard(p,i){
-  const ico=CARD_ICOS[i%CARD_ICOS.length];
-  if(editingId===p.id){
+function renderCard(p, i) {
+  const ico = CARD_ICOS[i % CARD_ICOS.length];
+  if (editingId === p.id) {
     return `<div class="card-wrap" data-id="${p.id}">
       <div class="edit-card">
         <input type="text" id="edit-name" value="${esc(p.name)}" placeholder="程式名稱">
         <input type="text" id="edit-url" class="edit-url" value="${esc(p.url)}" placeholder="網址 URL">
         <div class="edit-row">
-          <button class="btn-save" onclick="saveEdit('${p.id}')">儲存</button>
-          <button class="btn-cancel" onclick="cancelEdit()">取消</button>
+          <button class="btn-save" onclick="window.saveEdit('${p.id}')">儲存</button>
+          <button class="btn-cancel" onclick="window.cancelEdit()">取消</button>
         </div>
       </div>
     </div>`;
   }
-  return `<div class="card-wrap" data-id="${p.id}" ${isAdmin?'draggable="true"':''}>
-    ${isAdmin?`<div class="drag-handle show" title="拖曳移動">⠿</div>`:''}
+  return `<div class="card-wrap" data-id="${p.id}" ${isAdmin ? 'draggable="true"' : ''}>
+    ${isAdmin ? `<div class="drag-handle show" title="拖曳移動">⠿</div>` : ''}
     <a class="card" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer"
-      style="${isAdmin?'padding-left:2rem;padding-right:2.5rem':''}">
+      style="${isAdmin ? 'padding-left:2rem;padding-right:2.5rem' : ''}">
       <div class="card-ico">${ico}</div>
       <p class="card-name">${esc(p.name)}</p>
-      <p class="card-url">🔗 ${esc(p.url.replace(/^https?:\/\//,''))}</p>
+      <p class="card-url">🔗 ${esc(p.url.replace(/^https?:\/\//, ''))}</p>
     </a>
-    ${isAdmin?`<div class="card-admin show">
-      <button class="ico-btn" onclick="startEdit('${p.id}')" title="編輯">✎</button>
-      <button class="ico-btn del" onclick="delProgram('${p.id}')" title="刪除">✕</button>
-    </div>`:''}
+    ${isAdmin ? `<div class="card-admin show">
+      <button class="ico-btn" onclick="window.startEdit('${p.id}')" title="編輯">✎</button>
+      <button class="ico-btn del" onclick="window.delProgram('${p.id}')" title="刪除">✕</button>
+    </div>` : ''}
   </div>`;
 }
 
-// ── 拖曳排序 ──
-function initDrag(){
-  const wraps=document.querySelectorAll('#card-grid .card-wrap');
-  wraps.forEach(wrap=>{
-    wrap.addEventListener('dragstart',e=>{
-      dragSrcId=wrap.dataset.id;
+// ── 拖曳 ──
+function initDrag() {
+  const wraps = document.querySelectorAll('#card-grid .card-wrap');
+  wraps.forEach(wrap => {
+    wrap.addEventListener('dragstart', e => {
+      dragSrcId = wrap.dataset.id;
       wrap.classList.add('dragging');
-      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.effectAllowed = 'move';
     });
-    wrap.addEventListener('dragend',()=>{
+    wrap.addEventListener('dragend', () => {
       wrap.classList.remove('dragging');
-      document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     });
-    wrap.addEventListener('dragover',e=>{
+    wrap.addEventListener('dragover', e => {
       e.preventDefault();
-      e.dataTransfer.dropEffect='move';
-      document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
-      if(wrap.dataset.id!==dragSrcId) wrap.classList.add('drag-over');
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      if (wrap.dataset.id !== dragSrcId) wrap.classList.add('drag-over');
     });
-    wrap.addEventListener('dragleave',()=>wrap.classList.remove('drag-over'));
-    wrap.addEventListener('drop',e=>{
+    wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over'));
+    wrap.addEventListener('drop', e => {
       e.preventDefault();
       wrap.classList.remove('drag-over');
-      const targetId=wrap.dataset.id;
-      if(!dragSrcId||dragSrcId===targetId)return;
-      const list=data[activeCat];
-      const srcIdx=list.findIndex(p=>p.id===dragSrcId);
-      const tgtIdx=list.findIndex(p=>p.id===targetId);
-      const [item]=list.splice(srcIdx,1);
-      list.splice(tgtIdx,0,item);
-      save();renderGrid();
+      const targetId = wrap.dataset.id;
+      if (!dragSrcId || dragSrcId === targetId) return;
+      const list = data[activeCat];
+      const srcIdx = list.findIndex(p => p.id === dragSrcId);
+      const tgtIdx = list.findIndex(p => p.id === targetId);
+      const [item] = list.splice(srcIdx, 1);
+      list.splice(tgtIdx, 0, item);
+      save();
     });
-    // 拖曳把手阻止連結點擊
-    const handle=wrap.querySelector('.drag-handle');
-    if(handle){
-      handle.addEventListener('mousedown',e=>e.preventDefault());
-    }
   });
 }
 
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function startEdit(id){editingId=id;renderGrid();setTimeout(()=>document.getElementById('edit-name')?.focus(),50)}
-function cancelEdit(){editingId=null;renderGrid()}
-function saveEdit(id){
-  const name=document.getElementById('edit-name').value.trim();
-  let url=document.getElementById('edit-url').value.trim();
-  if(!name||!url)return;
-  if(!url.startsWith('http'))url='https://'+url;
-  data[activeCat]=data[activeCat].map(p=>p.id===id?{...p,name,url}:p);
-  editingId=null;save();renderGrid();
-}
-function delProgram(id){
-  if(!confirm('確定要刪除這個程式嗎？'))return;
-  data[activeCat]=data[activeCat].filter(p=>p.id!==id);
-  save();renderGrid();
-}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+window.startEdit = id => { editingId = id; renderGrid(); setTimeout(() => document.getElementById('edit-name')?.focus(), 50); };
+window.cancelEdit = () => { editingId = null; renderGrid(); };
+window.saveEdit = id => {
+  const name = document.getElementById('edit-name').value.trim();
+  let url = document.getElementById('edit-url').value.trim();
+  if (!name || !url) return;
+  if (!url.startsWith('http')) url = 'https://' + url;
+  data[activeCat] = data[activeCat].map(p => p.id === id ? {...p, name, url} : p);
+  editingId = null; save();
+};
+window.delProgram = id => {
+  if (!confirm('確定要刪除這個程式嗎？')) return;
+  data[activeCat] = data[activeCat].filter(p => p.id !== id);
+  save();
+};
 
-document.getElementById('pw-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+document.getElementById('pw-modal').addEventListener('click', function(e) { if (e.target === this) window.closeModal(); });
+
+// ── 初始化 ──
 applyCatVars(CATS[0]);
 renderTabs();
-renderGrid();
 </script>
 </body>
 </html>

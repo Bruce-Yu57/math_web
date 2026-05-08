@@ -34,6 +34,9 @@ h1{font-family:'Noto Serif TC',serif;font-size:26px;font-weight:500;margin-botto
 main{max-width:1100px;margin:0 auto;padding:2rem}
 .action-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
 .count{font-size:13px;color:var(--txt2)}
+.action-right{display:flex;align-items:center;gap:8px}
+.drag-hint{font-size:12px;color:var(--txt3);display:none}
+.drag-hint.show{display:block}
 #add-btn{display:none;align-items:center;gap:6px;font-size:13px;padding:6px 16px;border-radius:var(--r-md);border:1px solid var(--cat-bdr);background:var(--cat-bg);color:var(--cat-txt);cursor:pointer;font-family:'Noto Sans TC',sans-serif}
 #add-btn.show{display:flex}
 #add-form{display:none;background:var(--surface);border:1px solid var(--cat-bdr);border-radius:var(--r-lg);padding:1.25rem;margin-bottom:1.25rem}
@@ -47,23 +50,42 @@ input[type=text]:focus,input[type=password]:focus{border-color:#999}
 .btn-save{padding:7px 18px;border-radius:var(--r-md);font-size:13px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;background:var(--cat-bg);color:var(--cat-txt);border:1px solid var(--cat-bdr)}
 .btn-cancel{padding:7px 14px;border-radius:var(--r-md);font-size:13px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;background:none;color:var(--txt2);border:1px solid var(--border)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.card-wrap{position:relative}
+
+/* 卡片 */
+.card-wrap{position:relative;transition:opacity .2s}
+.card-wrap.dragging{opacity:.35}
+.card-wrap.drag-over .card{border-color:var(--cat-bdr);box-shadow:0 0 0 2px var(--cat-bdr)}
 .card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.1rem;text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s}
 .card:hover{border-color:var(--cat-bdr);box-shadow:0 4px 16px rgba(0,0,0,.07)}
 .card-ico{width:42px;height:42px;border-radius:var(--r-md);background:var(--cat-bg);display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:22px}
 .card-name{font-family:'Noto Serif TC',serif;font-size:14px;font-weight:500;color:var(--txt);line-height:1.4;margin-bottom:5px}
 .card-url{font-size:11px;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 拖曳把手 */
+.drag-handle{
+  position:absolute;top:8px;left:8px;
+  width:22px;height:22px;
+  display:none;align-items:center;justify-content:center;
+  cursor:grab;color:var(--txt3);font-size:14px;
+  border-radius:4px;
+}
+.drag-handle:active{cursor:grabbing}
+.drag-handle.show{display:flex}
+
+/* 編輯按鈕 */
 .card-admin{display:none;position:absolute;top:7px;right:7px;gap:3px}
 .card-admin.show{display:flex}
-.ico-btn{width:26px;height:26px;border:1px solid var(--border);background:var(--surface);border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--txt2);transition:background .1s}
+.ico-btn{width:26px;height:26px;border:1px solid var(--border);background:var(--surface);border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--txt2);transition:background .1s}
 .ico-btn:hover{background:var(--bg)}
-.ico-btn:disabled{opacity:.25;cursor:default}
 .ico-btn.del{color:#c0392b}
+
+/* 編輯卡片 */
 .edit-card{background:var(--surface);border:1px solid var(--cat-bdr);border-radius:var(--r-lg);padding:1rem}
 .edit-card input{width:100%;margin-bottom:8px;display:block}
 .edit-card .edit-url{margin-bottom:12px;font-size:11px}
 .edit-row{display:flex;gap:6px}
 .edit-row .btn-save,.edit-row .btn-cancel{flex:1;text-align:center}
+
 .empty{text-align:center;padding:3rem 0;color:var(--txt2)}
 .empty-ico{font-size:40px;display:block;margin-bottom:12px;opacity:.25}
 .empty p{font-size:14px}
@@ -100,7 +122,10 @@ footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-al
 <main>
   <div class="action-bar">
     <span class="count" id="count-label">0 個互動程式</span>
-    <button id="add-btn" onclick="toggleAddForm()">＋ 新增程式</button>
+    <div class="action-right">
+      <span class="drag-hint" id="drag-hint">⠿ 拖曳卡片可調整順序</span>
+      <button id="add-btn" onclick="toggleAddForm()">＋ 新增程式</button>
+    </div>
   </div>
   <div id="add-form">
     <p class="form-label">新增互動程式</p>
@@ -131,8 +156,7 @@ footer{border-top:1px solid var(--border);margin-top:2rem;padding:1.5rem;text-al
 </div>
 
 <script>
-const ADMIN_PW = 'lcjh';
-
+const ADMIN_PW='lcjh';
 const CATS=[
   {id:'elementary',label:'國小數學',ico:'➕',bg:'--teal-bg',txt:'--teal-txt',bdr:'--teal-bdr'},
   {id:'grade7',label:'七年級',ico:'📈',bg:'--blue-bg',txt:'--blue-txt',bdr:'--blue-bdr'},
@@ -143,9 +167,9 @@ const CATS=[
 const CARD_ICOS=['🔢','📊','📏','📈','🔵','⬡','🎯','⚡','💡','🏆','🧮','🔶','➗','∑','π','√'];
 let data=JSON.parse(localStorage.getItem('math-dir')||'{"elementary":[],"grade7":[],"grade8":[],"grade9":[],"other":[]}');
 let activeCat='elementary',isAdmin=false,editingId=null,showAdd=false;
+let dragSrcId=null;
 
 function save(){localStorage.setItem('math-dir',JSON.stringify(data))}
-
 function applyCatVars(cat){
   const r=document.documentElement.style;
   r.setProperty('--cat-bg',`var(${cat.bg})`);
@@ -153,43 +177,34 @@ function applyCatVars(cat){
   r.setProperty('--cat-bdr',`var(${cat.bdr})`);
 }
 
-// ── 密碼 Modal ──
+// ── 密碼 ──
 function clickAdmin(){
-  if(isAdmin){ logOut(); return; }
+  if(isAdmin){logOut();return;}
   document.getElementById('pw-modal').classList.add('show');
   document.getElementById('pw-error').classList.remove('show');
   document.getElementById('pw-input').value='';
   setTimeout(()=>document.getElementById('pw-input').focus(),50);
 }
-function closeModal(){
-  document.getElementById('pw-modal').classList.remove('show');
-}
+function closeModal(){document.getElementById('pw-modal').classList.remove('show')}
 function checkPw(){
-  const val=document.getElementById('pw-input').value;
-  if(val===ADMIN_PW){
-    closeModal();
-    enterAdmin();
-  } else {
-    document.getElementById('pw-error').classList.add('show');
-    document.getElementById('pw-input').value='';
-    document.getElementById('pw-input').focus();
-  }
+  if(document.getElementById('pw-input').value===ADMIN_PW){closeModal();enterAdmin();}
+  else{document.getElementById('pw-error').classList.add('show');document.getElementById('pw-input').value='';document.getElementById('pw-input').focus();}
 }
 function enterAdmin(){
   isAdmin=true;
   document.getElementById('add-btn').classList.add('show');
+  document.getElementById('drag-hint').classList.add('show');
   const btn=document.getElementById('admin-toggle');
-  btn.textContent='✓ 編輯中';
-  btn.classList.add('on');
+  btn.textContent='✓ 編輯中';btn.classList.add('on');
   renderGrid();
 }
 function logOut(){
   isAdmin=false;editingId=null;showAdd=false;
   document.getElementById('add-form').classList.remove('show');
   document.getElementById('add-btn').classList.remove('show');
+  document.getElementById('drag-hint').classList.remove('show');
   const btn=document.getElementById('admin-toggle');
-  btn.textContent='管理';
-  btn.classList.remove('on');
+  btn.textContent='管理';btn.classList.remove('on');
   renderGrid();
 }
 
@@ -207,10 +222,11 @@ function setCategory(id){
   applyCatVars(CATS.find(c=>c.id===id));
   document.getElementById('add-form').classList.remove('show');
   document.getElementById('add-btn').classList.toggle('show',isAdmin);
+  document.getElementById('drag-hint').classList.toggle('show',isAdmin);
   renderTabs();renderGrid();
 }
 
-// ── Add Form ──
+// ── 新增 ──
 function toggleAddForm(){
   showAdd=!showAdd;
   document.getElementById('add-form').classList.toggle('show',showAdd);
@@ -238,33 +254,77 @@ function renderGrid(){
     area.innerHTML=`<div class="empty"><span class="empty-ico">${cat.ico}</span><p>此類別尚未新增程式</p>${isAdmin?'<small>點擊「新增程式」開始建立</small>':''}</div>`;
     return;
   }
-  area.innerHTML=`<div class="grid">${list.map((p,i)=>renderCard(p,i,list.length)).join('')}</div>`;
+  area.innerHTML=`<div class="grid" id="card-grid">${list.map((p,i)=>renderCard(p,i)).join('')}</div>`;
+  if(isAdmin)initDrag();
 }
-function renderCard(p,i,total){
+
+function renderCard(p,i){
   const ico=CARD_ICOS[i%CARD_ICOS.length];
   if(editingId===p.id){
-    return `<div class="edit-card">
-      <input type="text" id="edit-name" value="${esc(p.name)}" placeholder="程式名稱">
-      <input type="text" id="edit-url" class="edit-url" value="${esc(p.url)}" placeholder="網址 URL">
-      <div class="edit-row">
-        <button class="btn-save" onclick="saveEdit('${p.id}')">儲存</button>
-        <button class="btn-cancel" onclick="cancelEdit()">取消</button>
+    return `<div class="card-wrap" data-id="${p.id}">
+      <div class="edit-card">
+        <input type="text" id="edit-name" value="${esc(p.name)}" placeholder="程式名稱">
+        <input type="text" id="edit-url" class="edit-url" value="${esc(p.url)}" placeholder="網址 URL">
+        <div class="edit-row">
+          <button class="btn-save" onclick="saveEdit('${p.id}')">儲存</button>
+          <button class="btn-cancel" onclick="cancelEdit()">取消</button>
+        </div>
       </div>
     </div>`;
   }
-  return `<div class="card-wrap">
-    <a class="card" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">
+  return `<div class="card-wrap" data-id="${p.id}" ${isAdmin?'draggable="true"':''}>
+    ${isAdmin?`<div class="drag-handle show" title="拖曳移動">⠿</div>`:''}
+    <a class="card" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer"
+      style="${isAdmin?'padding-left:2rem;padding-right:2.5rem':''}">
       <div class="card-ico">${ico}</div>
       <p class="card-name">${esc(p.name)}</p>
       <p class="card-url">🔗 ${esc(p.url.replace(/^https?:\/\//,''))}</p>
     </a>
     ${isAdmin?`<div class="card-admin show">
-      <button class="ico-btn" onclick="move('${p.id}',-1)" ${i===0?'disabled':''} title="往前移">←</button>
-      <button class="ico-btn" onclick="move('${p.id}',1)" ${i===total-1?'disabled':''} title="往後移">→</button>
       <button class="ico-btn" onclick="startEdit('${p.id}')" title="編輯">✎</button>
       <button class="ico-btn del" onclick="delProgram('${p.id}')" title="刪除">✕</button>
     </div>`:''}
   </div>`;
+}
+
+// ── 拖曳排序 ──
+function initDrag(){
+  const wraps=document.querySelectorAll('#card-grid .card-wrap');
+  wraps.forEach(wrap=>{
+    wrap.addEventListener('dragstart',e=>{
+      dragSrcId=wrap.dataset.id;
+      wrap.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    wrap.addEventListener('dragend',()=>{
+      wrap.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+    });
+    wrap.addEventListener('dragover',e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+      if(wrap.dataset.id!==dragSrcId) wrap.classList.add('drag-over');
+    });
+    wrap.addEventListener('dragleave',()=>wrap.classList.remove('drag-over'));
+    wrap.addEventListener('drop',e=>{
+      e.preventDefault();
+      wrap.classList.remove('drag-over');
+      const targetId=wrap.dataset.id;
+      if(!dragSrcId||dragSrcId===targetId)return;
+      const list=data[activeCat];
+      const srcIdx=list.findIndex(p=>p.id===dragSrcId);
+      const tgtIdx=list.findIndex(p=>p.id===targetId);
+      const [item]=list.splice(srcIdx,1);
+      list.splice(tgtIdx,0,item);
+      save();renderGrid();
+    });
+    // 拖曳把手阻止連結點擊
+    const handle=wrap.querySelector('.drag-handle');
+    if(handle){
+      handle.addEventListener('mousedown',e=>e.preventDefault());
+    }
+  });
 }
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -283,20 +343,8 @@ function delProgram(id){
   data[activeCat]=data[activeCat].filter(p=>p.id!==id);
   save();renderGrid();
 }
-function move(id,dir){
-  const list=data[activeCat];
-  const i=list.findIndex(p=>p.id===id);
-  const j=i+dir;
-  if(j<0||j>=list.length)return;
-  [list[i],list[j]]=[list[j],list[i]];
-  save();renderGrid();
-}
 
-// 點 Modal 外面關閉
-document.getElementById('pw-modal').addEventListener('click',function(e){
-  if(e.target===this)closeModal();
-});
-
+document.getElementById('pw-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 applyCatVars(CATS[0]);
 renderTabs();
 renderGrid();
